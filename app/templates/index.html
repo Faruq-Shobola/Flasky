@@ -8,18 +8,26 @@
 <div class="page-header">
    <h1>Hello,
     {% if current_user.is_authenticated %}
-    {{ current_user.username }}
+        {{ current_user.username }}
     {% else %}
-    Stranger
+        Stranger
     {% endif %}!</h1> 
 </div>
 <div>
     {% if current_user.can(Permission.WRITE) %}
     {{ wtf.quick_form(form) }}
     {% endif %}
+
 </div>
 {% include '_posts.html' %}
-<div class="pagination">
-    {{ macros.pagination_widget(pagination, '.index') }}
-</div>
+{% if pagination %}
+    <div class="pagination">
+        {{ macros.pagination_widget(pagination, '.index') }}
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{{ pagedown.include_pagedown() }}
 {% endblock %}
