@@ -5,8 +5,8 @@ from ..models import Role
 
 
 
-class NameForm(FlaskForm):
-    name = StringField('What is your name?', validators=[DataRequired()])
+class PostForm(FlaskForm):
+    body = TextAreaField("What's on your mind?", validators=[DataRequired()])
     submit = SubmitField('Submit')
 
 class EditProfileForm(FlaskForm):

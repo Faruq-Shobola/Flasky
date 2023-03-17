@@ -67,14 +67,13 @@ class Role(db.Model):
             db.session.add(role)
         db.session.commit()
 
-
-
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(64), unique=True, index=True)
     username = db.Column(db.String(64), unique=True, index=True)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
+    posts = db.relationship('Post', backref='author', lazy='dynamic')
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
     name = db.Column(db.String(64))
@@ -207,3 +206,10 @@ class AnonymousUser(AnonymousUserMixin):
         return False
 
 login_manager.anonymous_user = AnonymousUser
+
+class Post(db.Model):
+    __tablename__ = 'posts'
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
