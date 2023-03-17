@@ -1,4 +1,4 @@
-from flask import render_template, session, redirect, url_for, current_app, flash, abort
+from flask import render_template, session, redirect, url_for, current_app, flash, abort, request
 from flask_login import login_required, current_user
 from .. import db
 from ..models import User, Role, Permission, Post
@@ -18,8 +18,11 @@ def index():
         db.session.add(post)
         db.session.commit()
         return redirect(url_for('.index'))
-    posts = Post.query.order_by(Post.timestamp.desc()).all()
-    return render_template('index.html', form=form, posts=posts)
+    page = request.args.get('page', 1, type=int)
+    per_page= int(current_app.config['FLASK_POST_PER_PAGE'])
+    pagination = Post.query.order_by(Post.timestamp.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    posts = pagination.items
+    return render_template('index.html', form=form, posts=posts, pagination=pagination)
 
 
 @main.route('/user/<username>')
