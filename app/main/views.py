@@ -2,10 +2,10 @@ from flask import render_template, session, redirect, url_for,\
      current_app, flash, abort, request, make_response
 from flask_login import login_required, current_user
 from .. import db
-from ..models import User, Role, Permission, Post
+from ..models import User, Role, Permission, Post, Comment
 from ..email import send_email
 from . import main
-from .forms import PostForm, EditProfileForm, EditProfileAdminForm
+from .forms import PostForm, EditProfileForm, EditProfileAdminForm, CommentForm
 from ..decorators import admin_required, permission_required
 
 
@@ -106,10 +106,27 @@ def edit_profile_admin(id):
     return render_template('edit_profile.html', form=form, user=user)
 
 
-@main.route('/post/<int:id>')
+@main.route('/post/<int:id>', methods=['GET', 'POST'])
 def post(id):
     post = Post.query.get_or_404(id)
-    return render_template('post.html', posts=[post])
+    form = CommentForm()
+    if form.validate_on_submit():
+        comment = Comment(body=form.body.data, post=post,
+                author=current_user._get_current_object())
+        db.session.add(comment)
+        db.session.commit()
+        flash('Your comment has been published.')
+        return redirect(url_for('.post', id=post.id, page=-1))
+    page = request.args.get('page', 1, type=int)
+    per_page= int(current_app.config['FLASK_POST_PER_PAGE'])
+    if page == -1:
+        page = (post.comments.count() - 1) // \
+        current_app.config['FLASKY_COMMENTS_PER_PAGE'] + 1
+    pagination = post.comments.order_by(Comment.timestamp.asc())\
+            .paginate(page=page, per_page=per_page, error_out=False)
+    comments = pagination.items
+    return render_template('post.html', posts=[post], form=form, 
+                        comments=comments, pagination=pagination)
 
 
 @main.route('/edit/<int:id>', methods=['GET', 'POST'])
